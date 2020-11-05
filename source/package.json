@@ -1,0 +1,30 @@
+{
+  "name": "nw-demo",
+  "main": "index.html",
+  "window": {
+    "show_in_taskbar": true,
+    "toolbar": false,
+    "position": "center",
+    "resizable": true,
+    "width": 600,
+    "height": 550,
+    "node-remote": [
+      "*://*"
+    ],
+    "chromium-args": "--disable-web-security --enable-html-imports --allow-file-access"
+  },
+  "webview": {
+    "partitions": [
+      {
+        "mainWorld": true,
+        "name": "trusted",
+        "accessible_resources": [
+          "<all_urls>"
+        ]
+      }
+    ]
+  },
+  "dependencies": {
+    "phantomjs": "^2.1.7"
+  }
+}

@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <title> Manhuagui 漫畫下載機 </title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf8">
+  <script language="javascript" src="javascript/jquery/jquery-1.8.3.min.js"></script>
+  <script src="javascript/jquery/mybox.js" type="text/javascript"></script>  
+  <script src="javascript/php/php.js" type="text/javascript"></script>
+  <script src="javascript/include.js" type="text/javascript"></script>
+  <style>
+  .thetable{
+    width:100%;
+  }
+  .thetable td[field='option']{
+    width:60px;
+    text-align:center;
+  }
+  .thetable td[field='name']{
+    width:80px;
+    text-align:center;
+  }
+  </style>  
+<script language="javascript">
+var Browser = require("zombie");
+child_process = require('child_process');
+request = require('request');
+fs = require('fs');
+window['mydownload'] = function(uri, filename, callback){
+  request.head(uri, function(err, res, body){
+    console.log('content-type:', res.headers['content-type']);
+    console.log('content-length:', res.headers['content-length']);
+    headers = {
+        'user-agent': 'Mozilla/5.0 (Macintosh Intel Mac OS X 10_13_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36',
+        'Referer':'https://www.manhuagui.com/'
+    }
+    //alert(uri);
+    request({headers:headers,uri:uri}).pipe(fs.createWriteStream(filename)).on('close', callback);
+  });
+};
+window['spawn'] = child_process.spawn;
+window['wh']=getWindowSize();
+window['mDL'] = new Array();
+$(document).ready(function(){
+  setInterval(function(){
+    if(window['mDL'].length>=1)
+    {
+      var ss = window['mDL'].pop();
+      var op = "..\\DOWNLOAD\\"+ss["title"]+"\\"+ss["回"];
+      if(!fs.existsSync(op))
+      {
+        fs.mkdirSync(op,{'recursive':true});
+      }
+      mydownload(ss["url"],op+"\\"+ss["page"],function(){
+        console.log("抓了");
+      });
+    }
+  },500);
+  $("#backToTop").unbind("click").click(function(){
+    $("#iframe").attr('src','https://www.manhuagui.com/');
+  });
+  $("#iframe").css({
+    'width':window['wh']['width']+'px',
+    'height':(window['wh']['height']-50)+'px'
+  });
+  $("#reloadBtn").unbind("click").click(function(){
+    location.replace("?");
+  });
+  $("#iframe").bind("load",function(){
+    //$("iframe")[0].contentWindow.location.href
+    //"https://www.manhuagui.com/3745/1/"
+    $("#downloadBtnAll").prop("disabled",true);
+    $("#downloadBtn").prop("disabled",true);
+    //alert($("#iframe")[0].contentWindow.location.href);
+    //$("#iframe")[0].contentWindow.mywww = window; 
+    if(is_string_like($("#iframe")[0].contentWindow.location.href,"https://www.manhuagui.com/comic/%"))
+    {
+      $("#getListsBtn").prop("disabled",false);
+      $("#getListsBtn").unbind("click").click(function(){
+        var comic_id = $("#iframe")[0].contentWindow.location.href.replace("https://www.manhuagui.com/comic/",'').replace("/",'');
+        var title = $("#iframe").contents().find("title").html().replace(" - 看漫画","").replace(" ","");
+        $("div[reqc='mytables'] fieldset[reqc='fieldset_"+comic_id+"']").remove();
+        $("div[reqc='mytables']").prepend("<fieldset reqc='fieldset_"+comic_id+"'><legend>"+title+"</legend></fieldset>");
+        //找出所有 div chapter-list-xxx 的 a 作列表
+        var dom_a = $("#iframe").contents().find("div[id^='chapter-list-'] a");
+        window['m_'+comic_id] = new Array();
+        for(var i=0,max_i=dom_a.length;i<max_i;i++)
+        {
+            var d = new Object();
+            d['title'] = title;                        
+            d['href'] = "https://www.manhuagui.com"+dom_a.eq(i).attr('href');
+            d['name'] = dom_a.eq(i).text();
+            d['option'] = "<input req_comic_id='"+comic_id+"' reqc='items' type='checkbox' req_id='"+i+"' value=\""+d['href']+"\">";
+            d['progress']="<div style='width:100%;'><div reqc='progress_"+comic_id+"_"+i+"'></div></div>";
+            window['m_'+comic_id].push(d);
+        }
+        var table = "<input type='button' reqc='download_"+comic_id+"' value='開始下載'>"; 
+        table += print_table(window['m_'+comic_id],"option,name,progress","<input type='checkbox' reqc='checkall_"+comic_id+"'>勾選,第幾回,下載進度","thetable");
+                        
+        $("fieldset[reqc='fieldset_"+comic_id+"']").append(table);
+        //可shift 複選功能
+        checkbox_multiselect_init($("input[req_comic_id='"+comic_id+"'][reqc='items']"));
+        $("input[reqc='checkall_"+comic_id+"']").unbind("click").click({'comic_id':comic_id},function(e){
+          $("input[req_comic_id='"+e.data.comic_id+"'][reqc='items']").prop("checked",$(this).prop("checked")); 
+        });
+        $("input[reqc='download_"+comic_id+"']").unbind("click").click({'comic_id':comic_id},function(e){
+          var items = $("input[req_comic_id='"+e.data.comic_id+"'][reqc='items']:checked");
+          //alert(items.length);
+          //download page url...
+          if(items.length==0) {
+            alert('請先勾選要抓哪些回數...');
+            return;
+          }
+          for(var i=0,max_i=items.length;i<max_i;i++)
+          {
+            var index = items.eq(i).attr('req_id');
+            var d = new Object();
+            d['title'] = window['m_'+e.data.comic_id][index]['title']; 
+            d['comic_id'] = e.data.comic_id;
+            d['回'] = window['m_'+e.data.comic_id][index]['name'];
+            d['URL'] = window['m_'+e.data.comic_id][index]['href'];
+            d['index'] = index;             
+            downloadURL(d);
+            break;
+          }  
+        });           
+      });
+    }
+    else
+    {
+      $("#getListsBtn").prop("disabled",true);
+    }
+  });
+});
+function getLinks(i,max_i,obj,b)
+{
+  console.log("getLinks:");
+  console.log(obj);
+  var progress_dom = $("fieldset[reqc='fieldset_"+obj['comic_id']+"'] table tbody tr").eq(obj['index']).find("td[field='progress']");
+  progress_dom.html(sprintf("%d / %d",(i+1),max_i));
+  var imgs = b.querySelectorAll('#mangaBox img');
+  //alert(imgs.length);
+  var ss = str_replace(".jpg",".jpg.webp",imgs[0].src);
+  ss = str_replace(".png",".png.webp",ss);
+  var d = {
+    'title':obj['title'],
+    '回':obj['回'],
+    'page':(i+1)+"."+subname(ss),
+    'url':ss
+  };
+  window['mDL'].push(d);
+}
+function sleep(milliseconds) {
+  const date = Date.now();
+  let currentDate = null;
+  do {
+    currentDate = Date.now();
+  } while (currentDate - date < milliseconds);
+}
+function downloadURL(obj){
+  //obj   
+  /*
+  d['title'] = 漫畫名稱
+  d['comic_id'] = e.data.comic_id;
+  d['回'] = window['m_'+e.data.comic_id][index]['name'];
+  d['URL'] = window['m_'+e.data.comic_id][index]['href'];
+  d['index']   
+  */
+  //console.log(mywww);
+  
+  
+  b = new Browser();
+  //alert(obj['URL']);
+  b.visit(obj['URL'], function () {
+    //透過browser.html()可以取回當下瀏覽器的內容
+    //console.log(b.html());
+    //console.log('======================================');
+    //執行form submit的動作
+    //b.click("#next");
+    //window['wtf']=b;
+    var pages_dom = $(b.html()).find("#pageSelect option");
+    //alert(pages_dom.length);
+    for(var i=0,max_i=pages_dom.length;i<max_i;i++)
+    {  
+      
+      //From : https://stackoverflow.com/questions/39585696/zombie-js-click-javascript-link         
+      //var imgs = $(b.html()).find("#mangaBox img");
+      //alert($(b.html()).find("#imgPreLoad").html());
+      (function(_i,_max_i,_obj,_b){
+        setTimeout(function(){
+          window['bb_'+_i] = new Browser();
+          window['bb_'+_i].visit(_obj['URL']+"#p="+(_i+1),function(){          
+            getLinks(_i,_max_i,_obj,window['bb_'+_i]);            
+            //$(b.html()).find("#pageSelect").val((i+1)).trigger("change").delay(1500);
+          });
+        },2000*_i);
+      })(i,max_i,obj,b);
+      
+    }
+    /*(function(_i,_max_i,_obj,_b){
+      setTimeout(function(){
+        var imgs = $(_b.html()).find("#imgPreLoad img");
+        alert($(_b.html()).find("#imgPreLoad").html());
+        console.log(imgs.length);
+        if(imgs.length>0)
+        {
+            
+          //var ss = str_replace(".jpg",".jpg.webp",imgs.eq(0).attr("src"));
+          //ss = str_replace(".png",".png.webp",ss);
+          getLinks(_i,_max_i,_obj,_b);
+        }
+      },1000);
+    })(i,max_i,obj,b);
+    */
+    /*fetch("https://i.hamreus.com/ps3/y/yiquanchaoren/%E7%AC%AC179%E8%AF%9D/0TIG5n.png.webp?e=1605310131&m=vzvYBcVxGKB-CsJzX5-XDQ", {
+      "referrer": "https://www.manhuagui.com/",
+      "referrerPolicy": "strict-origin-when-cross-origin",
+      "body": null,
+      "method": "GET",
+      "mode": "cors"
+    });*/
+    //alert(ss);
+    /*
+    window['request'] = require('request');
+    window['fs'] = require('fs');
+    consle.log(request);
+    consle.log(fs);
+    window['mydownload'] = function(uri, filename, callback){
+      window['request'].head(uri, function(err, res, body){
+        console.log('content-type:', res.headers['content-type']);
+        console.log('content-length:', res.headers['content-length']);
+        headers = {
+            'user-agent': 'Mozilla/5.0 (Macintosh Intel Mac OS X 10_13_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36',
+            'Referer':'https://www.manhuagui.com/'
+        }
+        //alert(uri);
+        window['request'](uri,headers=headers).pipe(window['fs'].createWriteStream(filename)).on('close', callback);
+      });
+    };
+    window['mydownload'](ss,"C:\\temp\\ok.png",function(){
+        alert('ok');
+    });
+    //window['mDL'].push(ss);   
+    */ 
+
+  });
+  
+  /*window['w_'+obj.comic_id+'_'+obj.index] = window.open(obj.URL,{},function(new_win){
+    console.log(new_win);
+    (function (_new_win,_obj) {
+      setTimeout(function(){
+        var o = $(_new_win.document);
+        var imgs = o.find("img");
+        alert(imgs.length);
+        alert(o.html());
+      },2000);
+    })(new_win,obj);
+  });
+  */
+  
+  //console.log('w_'+obj.comic_id+'_'+obj.index);
+  //console.log(window['w_'+obj.comic_id+'_'+obj.index]);
+  //console.log($(window['w_'+obj.comic_id+'_'+obj.index]).html());
+  /*var iframe_id = "iframe_"+obj.comic_id+"_"+obj.index;    
+  $("#"+iframe_id).remove();
+  $("body").append("<webview allownw partition=\"trusted\" id='"+iframe_id+"' nwfaketop></webview>");
+  //$("#"+iframe_id).load({iframe_id:iframe_id},function(e){
+    //alert('gg');
+    //$("#"+e.data.iframe_id).contents().window.closed
+  //});
+  console.log(obj.URL);
+  $.get( obj.URL, function( data ) {
+    console.log(data);
+    data = str_replace("<script src=\"//","<script src=\"https://",data);
+    data = str_replace("<script ","<script async ",data);
+    $("#"+iframe_id).html(data);
+  });*/
+  //var data = myAjax(obj.URL,"");
+  //$("#"+iframe_id).html(data);
+  //$("#"+iframe_id).load(obj.URL);
+  /*$("#"+iframe_id)[0].executeScript(
+	{
+		'mainWorld': true,
+		code: "console.log(window)",
+	}, (callback) => {
+		console.log(callback);
+	}
+    );
+  $("#"+iframe_id).attr('src',obj.URL);
+  */
+  //nw.Window.open(obj.URL, {'new_instance': true,'mixed_context':true}, function(win) {
+//    if(win) {
+//      win.eval(null, `
+      //window['request'] = require('request');
+      //window['fs'] = require('fs');
+      //window['mydownload'] = function(uri, filename, callback){
+      //  window['request'].head(uri, function(err, res, body){
+      //    console.log('content-type:', res.headers['content-type']);
+      //    console.log('content-length:', res.headers['content-length']);
+      //    window['request'](uri).pipe(window['fs'].createWriteStream(filename)).on('close', callback);
+      //  });
+      //};
+      
+      /*$("head").append("<script src='https://3wa.tw/inc/javascript/php/php.js' async><\/script>");
+      alert(print_r(win,true));
+      console.log(obj);            
+      setTimeout(function(){
+        //alert('gg');
+        var imgs_dom = $("#tbBox img");
+        //alert(imgs_dom.length);
+        for(var i=0,max_i=imgs_dom.length;i<max_i;i++)
+        {
+            
+            var href = imgs_dom.eq(i).attr('src');            
+            //window['mydownload'](href,"..\\DOWNLOAD\\ok_"+i+".png",function(){alert('ok');});
+            $(window.opener).contents().append("gg");
+        }
+      },3000);
+    `);*/
+    
+      /*console.log("win is no longer undefined!");
+      console.log(win);
+      //alert($("body").html());
+      var doc = win.window.document;
+      console.log(doc);
+      alert(doc.body.innerHTML);
+      */
+  //  } //if
+ // });
+      
+} 
+</script>
+</head>
+<body>
+<div align="right">  
+  <button id="backToTop">回首頁</button>
+  <button id="getListsBtn" disabled>取得下載資訊</button>  
+  <button id="reloadBtn">Reload</button>
+  <div reqc="mytables"></div>
+</div>
+<iframe src="https://www.manhuagui.com/" id="iframe" nwfaketop></iframe>
+</body>
+</html>
