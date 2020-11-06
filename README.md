@@ -16,10 +16,8 @@ mymanhuagui_webkit
 <li>1、至 https://nwjs.io/ 下載 node-webkit 程式，Normal 或 SDK 版皆可</li>
 <li>2、nwjs 解壓縮後，改目錄名稱成「nw」跟 run.bat 放一起</li>
 <li>3、執行 run.bat (其實就是 nw\nw.exe source)</li>
-<li>4、啟動後，畫面會自動打開 manhuagui 網頁，瀏覽到你想要看的漫畫，上面的「整部下載」按鈕就會變成可以點擊的狀況</li>
-<li>5、如果只想抓單一回，就進到該回，「單回下載」的按鈕就可以點擊</li>
-<li>6、下載後，檔案會自動存在 run.bat 目錄同一層的 DOWNLOAD 目錄</li>
-<li>7、詳細的使用方式可以參考 snapshot/mymanhuagui_downloader.mp4</li>
+<li>4、啟動後，畫面會自動打開 manhuagui 網頁，瀏覽到你想要看的漫畫，等上面的「取得下載資料」變成可以點，就點入</li>
+<li>5、選擇要下載的回數，按下「開始下載」，點一次即可，然後等待，就會下載到同目錄下的 DOWNLOAD 目錄</li>
 </ul>
 
 <h3>程式說明：</h3>
@@ -39,3 +37,8 @@ MIT License
 1、抓整部時，可以選擇要抓的回數嗎？<br>
 Ans：可以，但建議一次不要太貪心，可能會被ban...
 
+<h3>Todo：</h3>
+<ul>
+ <li>1、改成 tw.manhuagui.com，抓繁體中文的比較優</li>
+ <li>2、下載的路徑殘體轉正體中文</li>
+</ul>
