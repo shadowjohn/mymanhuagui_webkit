@@ -8,7 +8,9 @@ mymanhuagui_webkit
 <div align="center">
   <img src="snapshot/mymanhuagui_downloader.gif">
   <br>
-  執行畫面
+  執行畫面1<br>
+  <img src="snapshot/m2.gif">
+  執行畫面2<br>
 </div>
 <br>
 <h3>開發動機：</h3>
