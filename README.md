@@ -2,6 +2,9 @@
 mymanhuagui_webkit
 <h2>用 Node-webkit 開發的 mymanhuagui 漫畫下載機</h2>
 ------------------------------------------------------<br>
+<h3>最初發行時間：2020-11-06 02:34</h3>
+<h3>最後修改時間：2020-11-06 11:29</h3>
+<h3>作者：羽山秋人 https://3wa.tw</h3>
 <div align="center">
   <img src="snapshot/mymanhuagui_downloader.gif">
   <br>
@@ -39,7 +42,7 @@ Ans：可以，但建議一次不要太貪心，可能會被ban...
 
 <h3>Todo：</h3>
 <ul>
- <li>1、改成 tw.manhuagui.com，抓繁體中文的比較優</li>
- <li>2、下載的路徑殘體轉正體中文</li>
- <li>3、一次下載多回都抓到同一回錯誤的問題</li>
+ <li>(Done 2020-11-06) 1、改成 tw.manhuagui.com，抓繁體中文的比較優</li>
+ <li>(Done 2020-11-06) 2、下載的路徑殘體轉正體中文</li>
+ <li>(Done 2020-11-06) 3、一次下載多回都抓到同一回錯誤的問題</li>
 </ul>

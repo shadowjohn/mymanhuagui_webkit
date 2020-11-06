@@ -111,7 +111,7 @@ $(document).ready(function(){
             return;
           }
           for(var i=0,max_i=items.length;i<max_i;i++)
-          {
+          {                         
             var index = items.eq(i).attr('req_id');
             var d = new Object();
             d['title'] = window['m_'+e.data.comic_id][index]['title']; 
@@ -168,7 +168,7 @@ function downloadURL(obj){
   //console.log(mywww);
   
   
-  b = new Browser();
+  var b = new Browser();
   //alert(obj['URL']);
   b.visit(obj['URL'], function () {
     //透過browser.html()可以取回當下瀏覽器的內容
@@ -187,60 +187,16 @@ function downloadURL(obj){
       //alert($(b.html()).find("#imgPreLoad").html());
       (function(_i,_max_i,_obj,_b){
         setTimeout(function(){
-          window['bb_'+_i] = new Browser();
-          window['bb_'+_i].visit(_obj['URL']+"#p="+(_i+1),function(){          
-            getLinks(_i,_max_i,_obj,window['bb_'+_i]);            
+          var bb = new Browser();
+          bb.visit(_obj['URL']+"#p="+(_i+1),function(){          
+            getLinks(_i,_max_i,_obj,bb);            
             //$(b.html()).find("#pageSelect").val((i+1)).trigger("change").delay(1500);
           });
         },2000*_i);
       })(i,max_i,obj,b);
       
     }
-    /*(function(_i,_max_i,_obj,_b){
-      setTimeout(function(){
-        var imgs = $(_b.html()).find("#imgPreLoad img");
-        alert($(_b.html()).find("#imgPreLoad").html());
-        console.log(imgs.length);
-        if(imgs.length>0)
-        {
-            
-          //var ss = str_replace(".jpg",".jpg.webp",imgs.eq(0).attr("src"));
-          //ss = str_replace(".png",".png.webp",ss);
-          getLinks(_i,_max_i,_obj,_b);
-        }
-      },1000);
-    })(i,max_i,obj,b);
-    */
-    /*fetch("https://i.hamreus.com/ps3/y/yiquanchaoren/%E7%AC%AC179%E8%AF%9D/0TIG5n.png.webp?e=1605310131&m=vzvYBcVxGKB-CsJzX5-XDQ", {
-      "referrer": "https://www.manhuagui.com/",
-      "referrerPolicy": "strict-origin-when-cross-origin",
-      "body": null,
-      "method": "GET",
-      "mode": "cors"
-    });*/
-    //alert(ss);
-    /*
-    window['request'] = require('request');
-    window['fs'] = require('fs');
-    consle.log(request);
-    consle.log(fs);
-    window['mydownload'] = function(uri, filename, callback){
-      window['request'].head(uri, function(err, res, body){
-        console.log('content-type:', res.headers['content-type']);
-        console.log('content-length:', res.headers['content-length']);
-        headers = {
-            'user-agent': 'Mozilla/5.0 (Macintosh Intel Mac OS X 10_13_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36',
-            'Referer':'https://www.manhuagui.com/'
-        }
-        //alert(uri);
-        window['request'](uri,headers=headers).pipe(window['fs'].createWriteStream(filename)).on('close', callback);
-      });
-    };
-    window['mydownload'](ss,"C:\\temp\\ok.png",function(){
-        alert('ok');
-    });
-    //window['mDL'].push(ss);   
-    */ 
+
 
   });
   
