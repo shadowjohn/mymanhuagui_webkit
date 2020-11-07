@@ -18,11 +18,12 @@ mymanhuagui_webkit
 <br>
 <h3>使用方法：</h3>
 <ul>
-<li>1、至 https://nwjs.io/ 下載 node-webkit 程式，Normal 或 SDK 版皆可</li>
-<li>2、nwjs 解壓縮後，改目錄名稱成「nw」跟 run.bat 放一起</li>
-<li>3、執行 run.bat (其實就是 nw\nw.exe source)</li>
-<li>4、啟動後，畫面會自動打開 manhuagui 網頁，瀏覽到你想要看的漫畫，等上面的「取得下載資料」變成可以點，就點入</li>
-<li>5、選擇要下載的回數，按下「開始下載」，點一次即可，然後等待，就會下載到同目錄下的 DOWNLOAD 目錄</li>
+  <li>1、把本專案下載zip解開</li>
+  <li>2、至 https://nwjs.io/ 下載 node-webkit 程式，Normal 或 SDK 版皆可</li>
+  <li>3、nwjs 解壓縮後，把裡面的目錄移到本專案，改目錄名稱成「nw」跟 run.bat 放在同一層</li>
+  <li>4、執行 run.bat (其實就是 nw\nw.exe source)</li>
+  <li>5、啟動後，畫面會自動打開 manhuagui 網頁，瀏覽到你想要看的漫畫，稍微等一下上面的「取得下載資料」變成可以點，就點入</li>
+  <li>6、選擇要下載的回數，按下「開始下載」，點一次即可，然後等待，一開始會比較久些，接著漫畫就會下載到同目錄下的 DOWNLOAD 目錄</li>
 </ul>
 
 <h3>程式說明：</h3>
