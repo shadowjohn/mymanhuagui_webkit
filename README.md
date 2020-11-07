@@ -18,7 +18,7 @@ mymanhuagui_webkit
 <br>
 <h3>使用方法：</h3>
 <ul>
-  <li>1、把本專案下載zip解開</li>
+  <li>1、把本專案下載zip解開，或是安裝git，下：git clone https://github.com/shadowjohn/mymanhuagui_webkit</li>
   <li>2、至 https://nwjs.io/ 下載 node-webkit 程式，Normal 或 SDK 版皆可</li>
   <li>3、nwjs 解壓縮後，把裡面的目錄移到本專案，改目錄名稱成「nw」跟 run.bat 放在同一層</li>
   <li>4、執行 run.bat (其實就是 nw\nw.exe source)</li>
