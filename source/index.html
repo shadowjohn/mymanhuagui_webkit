@@ -17,7 +17,7 @@
     text-align:center;
   }
   .thetable td[field='name']{
-    width:80px;
+    width:180px;
     text-align:center;
   }
   .fieldset_comic legend span{
@@ -61,8 +61,9 @@ $(document).ready(function(){
       //如果檔案已存在，就跳過吧
       if(!fs.existsSync(op+"\\"+ss["page"]))
       {                  
-        mydownload(ss["url"],op+"\\"+ss["page"],function(){
+        mydownload(ss["url"],op+"\\"+ss["page"],function(e){
           console.log("抓了");
+          console.log(e);
         });
       }
       else
@@ -104,18 +105,58 @@ $(document).ready(function(){
         window['m_'+comic_id] = new Array();
         for(var i=0,max_i=dom_a.length;i<max_i;i++)
         {
-            var d = new Object();
+            var d = new Object();            
             d['title'] = title;                        
             d['href'] = "https://www.manhuagui.com"+dom_a.eq(i).attr('href');
+            d['sort_mn'] = mainname(d['href']);
             d['name'] = dom_a.eq(i).text();
-            d['option'] = "<input req_comic_id='"+comic_id+"' reqc='items' type='checkbox' req_id='"+i+"' value=\""+d['href']+"\">";
-            d['progress']="<div style='width:100%;'><span reqc='progress_"+comic_id+"_"+i+"'></span><span reqc='progress_"+comic_id+"_"+i+"_box'></span></div>";
+            d['option'] = "<input req_comic_id='"+comic_id+"' reqc='items' type='checkbox' req_id='{{index}}' value=\""+d['href']+"\">";
+            d['progress']="<div style='width:100%;'><span reqc='progress_"+comic_id+"_{{index}}'></span><span reqc='progress_"+comic_id+"_{{index}}_box'></span></div>";
+            d['already_download_data'] = 0; 
+            //順便檢查該目錄裡有多少檔案?
+            var op = "..\\DOWNLOAD\\"+d["title"]+"\\"+d['name'];
+            //改成正體目錄
+            op = stts_gb2big5(op);
+            if(fs.existsSync(op))
+            {
+                //目錄存在，抓看看有多少檔
+                console.log("Find files..." + op);
+                var fp = fs.readdirSync(op);
+                //console.log(fp);
+                d['already_download_data'] = fp.length;
+            }            
             window['m_'+comic_id].push(d);
         }
+        //也許sort by sort_mn 是個好方法
+        console.log(window['m_'+comic_id]);
+        //return;
+        window['m_'+comic_id] = array_sort(window['m_'+comic_id], "sort_mn", "ASC");
+        window['m_'+comic_id] = array_values(window['m_'+comic_id]);
+        
+        //checkbox 的 index id 要重排...
+        for(var i=0,max_i=window['m_'+comic_id].length;i<max_i;i++)
+        {
+           window['m_'+comic_id][i]['option'] = str_replace("{{index}}",i,window['m_'+comic_id][i]['option']);
+           window['m_'+comic_id][i]['progress'] = str_replace("{{index}}",i,window['m_'+comic_id][i]['progress']);
+        }
+        
+        
+        
         var table = "<input type='button' reqc='download_"+comic_id+"' value='開始下載'>"; 
         table += print_table(window['m_'+comic_id],"option,name,progress","<input type='checkbox' reqc='checkall_"+comic_id+"'>勾選,第幾回,下載進度","thetable");
                         
         $("fieldset[reqc='fieldset_"+comic_id+"'] div[reqc='contents_div']").append(table);
+        
+        //如果 already_download_data 不是 0 ，就顯示已抓幾頁
+        for(var i=0,max_i=count(window['m_'+comic_id]);i<max_i;i++)
+        {
+            var already_download_pages = window['m_'+comic_id][i]['already_download_data'];
+            if(already_download_pages!=0)
+            {
+               var progress_span_dom = $("fieldset[reqc='fieldset_"+comic_id+"'] table tbody tr").eq(i).find("span[reqc='progress_"+comic_id+'_'+i+"']");
+               progress_span_dom.html("已抓 "+already_download_pages+" 頁");
+            }
+        }
         
         //可縮放
         $(".fieldset_comic legend span[reqc='resize_span']").unbind("click").click(function(){

@@ -2,8 +2,72 @@
 
 String.prototype.trim=function(){return this.replace(/(^\s*)|(\s*$)/g,"")};
 
+function sortByArrayName(arr,sort_arr,field)
+{
+  //可以讓一個陣列參考一個現成的陣列排序某個欄位
+  var output = new Array();
 
+  for(var i=0,max_i=count(sort_arr);i<max_i;i++)
+  {
+    for(var j=count(arr)-1;j>=0;j--)
+    {
+         //alert(print_r(arr[j],true));
+       if(arr[j][field]==sort_arr[i])
+       {
+          output.push($.extend(true, {}, arr[j]) );
+          //delete arr[j];
+          //arr = array_values(arr);
+          arr.splice(j,1);
+       }
+    }
+    //最後再把沒排序到的，全放回output
+  }
   
+  for(var j=0,max_j=count(arr);j<max_j;j++)
+  {
+     output.push($.extend(true, {}, arr[j]) );
+  }
+  return output;
+}
+//以後排序用這支
+function array_sort(arr, field, order)
+{
+  var array = arr.slice();
+  //order = ='SORT_DESC'
+  if(order==null)
+  {
+    order = 'ASC';
+  }
+  //From : https://davidwalsh.name/array-sort
+  return array.sort(function(obj1, obj2) {
+    // Ascending: first age less than the previous
+    switch(order)
+    {
+        case 'ASC':
+        case 'SORT_ASC':
+          if(!isNaN(obj1[field]) && !isNaN(obj2[field]) )
+          {
+       	    return obj1[field]- obj2[field];
+          }
+          else
+          {
+            return obj1[field].replace("一","1").replace("二","2").replace("三","3").replace("四","4").replace("五","5").replace("六","6").replace("七","7").replace("八","8").replace("九","9").localeCompare(obj2[field].replace("一","1").replace("二","2").replace("三","3").replace("四","4").replace("五","5").replace("六","6").replace("七","7").replace("八","8").replace("九","9"), "zh-Hant"); 
+          }
+          break;
+        case 'DESC':
+        case 'SORT_DESC':
+          if(!isNaN(obj1[field]) && !isNaN(obj2[field]) )
+          {
+            return obj2[field]-obj1[field];
+          }
+          else
+          {
+            return obj2[field].replace("一","1").replace("二","2").replace("三","3").replace("四","4").replace("五","5").replace("六","6").replace("七","7").replace("八","8").replace("九","9").localeCompare(obj1[field].replace("一","1").replace("二","2").replace("三","3").replace("四","4").replace("五","5").replace("六","6").replace("七","7").replace("八","8").replace("九","9"), "zh-Hant"); 
+          }
+          break; 
+    }
+  });
+} 
 function getWindowSize(){
   var myWidth = 0, myHeight = 0;
   if( typeof( window.innerWidth ) == 'number' ) {
