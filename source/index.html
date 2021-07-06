@@ -3,9 +3,10 @@
 <head>
   <title> Manhuagui 漫畫下載機 </title>
   <meta http-equiv="Content-Type" content="text/html; charset=utf8">
-  <script language="javascript" src="javascript/jquery/jquery-1.8.3.min.js"></script>
-  <script src="javascript/jquery/mybox.js" type="text/javascript"></script>  
+  <script src="javascript/jquery/jquery-1.8.3.min.js"></script>
   <script src="javascript/php/php.js" type="text/javascript"></script>
+  <script src="javascript/jquery/mybox.js" type="text/javascript"></script>
+  <script src="javascript/stts.js" type="text/javascript"></script>      
   <script src="javascript/include.js" type="text/javascript"></script>
   <style>
   .thetable{
@@ -19,6 +20,10 @@
     width:80px;
     text-align:center;
   }
+  .fieldset_comic legend span{
+    color:blue;
+    text-decoration: underline;
+  }  
   </style>  
 <script language="javascript">
 var Browser = require("zombie");
@@ -46,13 +51,24 @@ $(document).ready(function(){
     {
       var ss = window['mDL'].pop();
       var op = "..\\DOWNLOAD\\"+ss["title"]+"\\"+ss["回"];
+      //改成正體目錄
+      op = stts_gb2big5(op);
+      console.log(op);
       if(!fs.existsSync(op))
       {
         fs.mkdirSync(op,{'recursive':true});
       }
-      mydownload(ss["url"],op+"\\"+ss["page"],function(){
-        console.log("抓了");
-      });
+      //如果檔案已存在，就跳過吧
+      if(!fs.existsSync(op+"\\"+ss["page"]))
+      {                  
+        mydownload(ss["url"],op+"\\"+ss["page"],function(){
+          console.log("抓了");
+        });
+      }
+      else
+      {
+        console.log("檔案已存在，跳過");
+      }
     }
   },500);
   $("#backToTop").unbind("click").click(function(){
@@ -79,7 +95,10 @@ $(document).ready(function(){
         var comic_id = $("#iframe")[0].contentWindow.location.href.replace("https://www.manhuagui.com/comic/",'').replace("/",'');
         var title = $("#iframe").contents().find("title").html().replace(" - 看漫画","").replace(" ","");
         $("div[reqc='mytables'] fieldset[reqc='fieldset_"+comic_id+"']").remove();
-        $("div[reqc='mytables']").prepend("<fieldset reqc='fieldset_"+comic_id+"'><legend>"+title+"</legend></fieldset>");
+        $("div[reqc='mytables']").prepend("<fieldset class='fieldset_comic' reqc='fieldset_"+comic_id+"'> \
+            <legend>"+title+"(<span style='cursor:pointer;' reqc='resize_span'>縮小/展開</span>)  \
+            <img src='pic/x_close.png' style='cursor:pointer;line-height:25px;width:25px;height:25px;' reqc='x_close'></legend> \
+            <div reqc='contents_div'></div></fieldset>");
         //找出所有 div chapter-list-xxx 的 a 作列表
         var dom_a = $("#iframe").contents().find("div[id^='chapter-list-'] a");
         window['m_'+comic_id] = new Array();
@@ -90,13 +109,26 @@ $(document).ready(function(){
             d['href'] = "https://www.manhuagui.com"+dom_a.eq(i).attr('href');
             d['name'] = dom_a.eq(i).text();
             d['option'] = "<input req_comic_id='"+comic_id+"' reqc='items' type='checkbox' req_id='"+i+"' value=\""+d['href']+"\">";
-            d['progress']="<div style='width:100%;'><div reqc='progress_"+comic_id+"_"+i+"'></div></div>";
+            d['progress']="<div style='width:100%;'><span reqc='progress_"+comic_id+"_"+i+"'></span><span reqc='progress_"+comic_id+"_"+i+"_box'></span></div>";
             window['m_'+comic_id].push(d);
         }
         var table = "<input type='button' reqc='download_"+comic_id+"' value='開始下載'>"; 
         table += print_table(window['m_'+comic_id],"option,name,progress","<input type='checkbox' reqc='checkall_"+comic_id+"'>勾選,第幾回,下載進度","thetable");
                         
-        $("fieldset[reqc='fieldset_"+comic_id+"']").append(table);
+        $("fieldset[reqc='fieldset_"+comic_id+"'] div[reqc='contents_div']").append(table);
+        
+        //可縮放
+        $(".fieldset_comic legend span[reqc='resize_span']").unbind("click").click(function(){
+          $(this).closest("fieldset").eq(0).find("div[reqc='contents_div']").fadeToggle("slow");
+        });
+        
+        //可按 x
+        $(".fieldset_comic legend img[reqc='x_close']").unbind("click").click(function(){
+            $(this).closest("fieldset").fadeOut("slow",function(){
+                $(this).remove();
+            });
+        }); 
+        
         //可shift 複選功能
         checkbox_multiselect_init($("input[req_comic_id='"+comic_id+"'][reqc='items']"));
         $("input[reqc='checkall_"+comic_id+"']").unbind("click").click({'comic_id':comic_id},function(e){
@@ -133,10 +165,15 @@ $(document).ready(function(){
 });
 function getLinks(i,max_i,obj,b)
 {
-  console.log("getLinks:");
+  //console.log("getLinks:");
   console.log(obj);
-  var progress_dom = $("fieldset[reqc='fieldset_"+obj['comic_id']+"'] table tbody tr").eq(obj['index']).find("td[field='progress']");
-  progress_dom.html(sprintf("%d / %d",(i+1),max_i));
+  //var progress_dom = $("fieldset[reqc='fieldset_"+obj['comic_id']+"'] table tbody tr").eq(obj['index']).find("td[field='progress'] span[reqc='progress_"+obj['comic_id']+'_'+i+"']");
+  //var progress_dom_box = $("fieldset[reqc='fieldset_"+obj['comic_id']+"'] table tbody tr").eq(obj['index']).find("td[field='progress'] span[reqc='progress_"+obj['comic_id']+'_'+i+"_box']");
+  var progress_dom = $("fieldset[reqc='fieldset_"+obj['comic_id']+"'] table tbody tr").eq(obj['index']).find("span[reqc='progress_"+obj['comic_id']+'_'+obj['index']+"']");
+  var progress_dom_box = $("fieldset[reqc='fieldset_"+obj['comic_id']+"'] table tbody tr").eq(obj['index']).find("span[reqc='progress_"+obj['comic_id']+'_'+obj['index']+"_box']");
+  progress_dom.text(sprintf("%d / %d",(i+1),max_i));
+  //console.log(progress_dom.length);
+  //console.log(sprintf("%d / %d",(i+1),max_i));
   var imgs = b.querySelectorAll('#mangaBox img');
   //alert(imgs.length);
   var ss = str_replace(".jpg",".jpg.webp",imgs[0].src);
@@ -167,9 +204,12 @@ function downloadURL(obj){
   */
   //console.log(mywww);
   
-  
+  //span 改成 努力下載中...請稍候...
+  var progress_dom = $("fieldset[reqc='fieldset_"+obj['comic_id']+"'] table tbody tr").eq(obj['index']).find("span[reqc='progress_"+obj['comic_id']+'_'+obj['index']+"']");
+  progress_dom.text("努力下載中...請稍候...");
   var b = new Browser();
   //alert(obj['URL']);
+  
   b.visit(obj['URL'], function () {
     //透過browser.html()可以取回當下瀏覽器的內容
     //console.log(b.html());
@@ -179,8 +219,15 @@ function downloadURL(obj){
     //window['wtf']=b;
     var pages_dom = $(b.html()).find("#pageSelect option");
     //alert(pages_dom.length);
-    for(var i=0,max_i=pages_dom.length;i<max_i;i++)
+    //總共有多少頁
+    //progress可以產生小方塊集團
+    var max_page = pages_dom.length;
+    //generator_box(obj["comic_id"],obj[",max_page);
+    for(var i=0,max_i=max_page;i<max_i;i++)
     {  
+      
+      //如果輸出的目錄，檔案已存在，可以跳過
+      
       
       //From : https://stackoverflow.com/questions/39585696/zombie-js-click-javascript-link         
       //var imgs = $(b.html()).find("#mangaBox img");
@@ -200,89 +247,7 @@ function downloadURL(obj){
 
   });
   
-  /*window['w_'+obj.comic_id+'_'+obj.index] = window.open(obj.URL,{},function(new_win){
-    console.log(new_win);
-    (function (_new_win,_obj) {
-      setTimeout(function(){
-        var o = $(_new_win.document);
-        var imgs = o.find("img");
-        alert(imgs.length);
-        alert(o.html());
-      },2000);
-    })(new_win,obj);
-  });
-  */
-  
-  //console.log('w_'+obj.comic_id+'_'+obj.index);
-  //console.log(window['w_'+obj.comic_id+'_'+obj.index]);
-  //console.log($(window['w_'+obj.comic_id+'_'+obj.index]).html());
-  /*var iframe_id = "iframe_"+obj.comic_id+"_"+obj.index;    
-  $("#"+iframe_id).remove();
-  $("body").append("<webview allownw partition=\"trusted\" id='"+iframe_id+"' nwfaketop></webview>");
-  //$("#"+iframe_id).load({iframe_id:iframe_id},function(e){
-    //alert('gg');
-    //$("#"+e.data.iframe_id).contents().window.closed
-  //});
-  console.log(obj.URL);
-  $.get( obj.URL, function( data ) {
-    console.log(data);
-    data = str_replace("<script src=\"//","<script src=\"https://",data);
-    data = str_replace("<script ","<script async ",data);
-    $("#"+iframe_id).html(data);
-  });*/
-  //var data = myAjax(obj.URL,"");
-  //$("#"+iframe_id).html(data);
-  //$("#"+iframe_id).load(obj.URL);
-  /*$("#"+iframe_id)[0].executeScript(
-	{
-		'mainWorld': true,
-		code: "console.log(window)",
-	}, (callback) => {
-		console.log(callback);
-	}
-    );
-  $("#"+iframe_id).attr('src',obj.URL);
-  */
-  //nw.Window.open(obj.URL, {'new_instance': true,'mixed_context':true}, function(win) {
-//    if(win) {
-//      win.eval(null, `
-      //window['request'] = require('request');
-      //window['fs'] = require('fs');
-      //window['mydownload'] = function(uri, filename, callback){
-      //  window['request'].head(uri, function(err, res, body){
-      //    console.log('content-type:', res.headers['content-type']);
-      //    console.log('content-length:', res.headers['content-length']);
-      //    window['request'](uri).pipe(window['fs'].createWriteStream(filename)).on('close', callback);
-      //  });
-      //};
-      
-      /*$("head").append("<script src='https://3wa.tw/inc/javascript/php/php.js' async><\/script>");
-      alert(print_r(win,true));
-      console.log(obj);            
-      setTimeout(function(){
-        //alert('gg');
-        var imgs_dom = $("#tbBox img");
-        //alert(imgs_dom.length);
-        for(var i=0,max_i=imgs_dom.length;i<max_i;i++)
-        {
-            
-            var href = imgs_dom.eq(i).attr('src');            
-            //window['mydownload'](href,"..\\DOWNLOAD\\ok_"+i+".png",function(){alert('ok');});
-            $(window.opener).contents().append("gg");
-        }
-      },3000);
-    `);*/
-    
-      /*console.log("win is no longer undefined!");
-      console.log(win);
-      //alert($("body").html());
-      var doc = win.window.document;
-      console.log(doc);
-      alert(doc.body.innerHTML);
-      */
-  //  } //if
- // });
-      
+
 } 
 </script>
 </head>
